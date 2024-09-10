@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Operations with Axios</title>
+    <!-- Include Axios via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>CRUD Operations with Axios and Mock API</h1>
+    
+    <!-- Form to Add or Update User -->
+    <form id="userForm">
+        <input type="hidden" id="userId" />
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="phone" placeholder="Phone" required>
+        <button type="submit">Save User</button>
+    </form>
+
+    <!-- Table to Display Users -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+
+    <script>
+        // Base URL for mock API
+        const API_URL = 'https://jsonplaceholder.typicode.com/users';
+
+        // Fetch users when the page loads
+        document.addEventListener('DOMContentLoaded', fetchUsers);
+
+        // Fetch all users
+        function fetchUsers() {
+            axios.get(API_URL)
+                .then(response => {
+                    const users = response.data;
+                    const userTableBody = document.getElementById('userTableBody');
+                    userTableBody.innerHTML = ''; // Clear table body
+                    users.forEach(user => {
+                        const row = `<tr>
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.phone}</td>
+                            <td>
+                                <button onclick="editUser(${user.id})">Edit</button>
+                                <button onclick="deleteUser(${user.id})">Delete</button>
+                            </td>
+                        </tr>`;
+                        userTableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Error fetching users:', error));
+        }
+
+        // Add or Update a user
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent form submission
+            const userId = document.getElementById('userId').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+
+            const userData = { name, email, phone };
+
+            if (userId) {
+                // Update user
+                axios.put(`${API_URL}/${userId}`, userData)
+                    .then(response => {
+                        console.log('User updated:', response.data);
+                        fetchUsers();
+                        clearForm();
+                    })
+                    .catch(error => console.error('Error updating user:', error));
+            } else {
+                // Create user
+                axios.post(API_URL, userData)
+                    .then(response => {
+                        console.log('User created:', response.data);
+                        fetchUsers();
+                        clearForm();
+                    })
+                    .catch(error => console.error('Error creating user:', error));
+            }
+        });
+
+        // Edit user
+        function editUser(id) {
+            axios.get(`${API_URL}/${id}`)
+                .then(response => {
+                    const user = response.data;
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('name').value = user.name;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('phone').value = user.phone;
+                })
+                .catch(error => console.error('Error fetching user:', error));
+        }
+
+        // Delete user
+        function deleteUser(id) {
+            axios.delete(`${API_URL}/${id}`)
+                .then(response => {
+                    console.log('User deleted:', response.data);
+                    fetchUsers();
+                })
+                .catch(error => console.error('Error deleting user:', error));
+        }
+
+        // Clear form after save or update
+        function clearForm() {
+            document.getElementById('userId').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+        }
+    </script>
+</body>
+</html>
